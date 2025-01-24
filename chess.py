@@ -1,16 +1,8 @@
 import re 
 import copy
-
-board = [
-    [ 5, 3, 4, 7, 9, 4, 3, 5],
-    [ 1, 1, 1, 1, 1, 1, 1, 1],
-    [ 0, 0, 0, 0, 0, 0, 0, 0],
-    [ 0, 0, 0, 0, 0, 0, 0, 0],
-    [ 0, 0, 0, 0, 0, 0, 0, 0],
-    [ 0, 0, 0, 0, 0, 0, 0, 0],
-    [-1,-1,-1,-1,-1,-1,-1,-1],
-    [-5,-3,-4,-7,-9,-4,-3,-5]
-]
+import time
+import random
+from collections import Counter
 
 coordinate = {
     "a":8,
@@ -20,7 +12,15 @@ coordinate = {
     "e":4,
     "f":3,
     "g":2,
-    "h":1
+    "h":1,
+    8:"a",
+    7:"b",
+    6:"c",
+    5:"d",
+    4:"e",
+    3:"f",
+    2:"g",
+    1:"h"
 }
 
 piece_note = {
@@ -71,7 +71,15 @@ piece = {
     -7: "roi_noir"
 }
 
-def valid_pion_move(move):
+def check_repetition():
+    serialized_boards = [tuple(tuple(row) for row in board) for board in list_game_board_move]
+    counts = Counter(serialized_boards)
+    for board, count in counts.items():
+        if count >= 3:
+            return True
+    return False
+
+def valid_pion_move(move,promotion):
   if move['end_value'] == 0: 
       if list_game_move:
         if (move['y_start_coordinate'] == 5 if move['start_value'] > 0 else move['y_start_coordinate'] == 3):
@@ -88,26 +96,30 @@ def valid_pion_move(move):
           if move['name_piece_coor1'] == "pion_blanc":     
               if move['y_end_coordinate'] == move['y_start_coordinate'] + 1 or (move['y_end_coordinate'] == move['y_start_coordinate'] + 2 and move['y_start_coordinate'] == 1 and board[move['y_start_coordinate'] + 1][move['x_start_coordinate']] == 0):
                   if move['y_end_coordinate'] == 7:
-                    print()
-                    print("----promotion mode 👑----")
-                    while True:
-                        promotion_piece = input("enter a piece: the queen: 'Q', the rook: 'R', the bishop: 'B' and the knight 'N'> ") 
+                    if promotion:
                         print()
-                        if promotion_piece == 'Q':
-                            move["start_value"] = 9
-                            return('valid')
-                            
-                        if promotion_piece == 'R':
-                            move["start_value"] = 5
-                            return('valid')
+                        print("----promotion mode 👑----")
+                        while True:
+                            promotion_piece = input("enter a piece: the queen: 'Q', the rook: 'R', the bishop: 'B' and the knight 'N'> ") 
+                            print()
+                            if promotion_piece == 'Q':
+                                move["start_value"] = 9
+                                return('valid')
+                                
+                            if promotion_piece == 'R':
+                                move["start_value"] = 5
+                                return('valid')
 
-                        if promotion_piece == 'B':
-                            move["start_value"] = 4
-                            return('valid')
+                            if promotion_piece == 'B':
+                                move["start_value"] = 4
+                                return('valid')
 
-                        if promotion_piece == 'N':
-                            move["start_value"] = 3
-                            return('valid')
+                            if promotion_piece == 'N':
+                                move["start_value"] = 3
+                                return('valid')
+                    else:
+                        move["start_value"] = 9
+                        return('valid')
                   return('valid')
               else:
                   return('illegal')
@@ -115,6 +127,80 @@ def valid_pion_move(move):
           if move['name_piece_coor1'] == "pion_noir":
             if move['y_start_coordinate'] == move['y_end_coordinate'] + 1 or (move['y_start_coordinate'] == move['y_end_coordinate'] + 2 and move['y_start_coordinate'] == 6 and board[move['y_start_coordinate'] - 1][move['x_start_coordinate']] == 0):
                 if move['y_end_coordinate'] == 0:
+                    if promotion:
+                        print()
+                        print("----promotion mode 👑----")
+                        while True:
+                            promotion_piece = input("enter a piece: the queen: 'Q', the rook: 'R', the bishop: 'B' and the knight 'N'> ") 
+                            print()
+                            if promotion_piece == 'Q':
+                                move["start_value"] = -9
+                                return('valid')
+                                
+                            if promotion_piece == 'R':
+                                move["start_value"] = -5
+                                return('valid')
+
+                            if promotion_piece == 'B':
+                                move["start_value"] = -4
+                                return('valid')
+
+                            if promotion_piece == 'N':
+                                move["start_value"] = -3
+                                return('valid')  
+                    else:
+                        move["start_value"] = -9
+                        return('valid')
+                return('valid')
+            else:
+                return('illegal')
+
+          if move['name_piece_coor1'] != "pion_noir" and move['name_piece_coor1'] != "pion_blanc":
+              return('illegal')
+      else: 
+          return('illegal')
+
+  elif move['end_value'] != 0:
+      if move['name_piece_coor1'] == "pion_blanc":
+          if move['end_value'] > 0:
+              return('illegal')
+          if (move['x_end_coordinate'] == move['x_start_coordinate'] + 1 or move['x_end_coordinate'] == move['x_start_coordinate'] - 1) and move['y_end_coordinate'] == move['y_start_coordinate'] + 1:
+                if move['y_end_coordinate'] == 7:
+                    if promotion:
+                        print()
+                        print("----promotion mode 👑----")
+                        while True:
+                            promotion_piece = input("enter a piece: the queen: 'Q', the rook: 'R', the bishop: 'B' and the knight 'N'> ") 
+                            print()
+                            if promotion_piece == 'Q':
+                                move["start_value"] = 9
+                                return('valid')
+                                
+                            if promotion_piece == 'R':
+                                move["start_value"] = 5
+                                return('valid')
+
+                            if promotion_piece == 'B':
+                                move["start_value"] = 4
+                                return('valid')
+
+                            if promotion_piece == 'N':
+                                move["start_value"] = 3
+                                return('valid')
+                    else:
+                        move["start_value"] = 9
+                        return('valid')
+                return('valid')
+          else:
+              return('illegal')
+
+
+      if move['name_piece_coor1'] == "pion_noir":
+          if move['end_value'] < 0:
+              return('illegal')
+          if (move['x_end_coordinate'] == move['x_start_coordinate'] + 1 or move['x_end_coordinate'] == move['x_start_coordinate'] - 1) and move['y_end_coordinate'] == move['y_start_coordinate'] - 1:
+            if move['y_end_coordinate'] == 0:
+                if promotion:
                     print()
                     print("----promotion mode 👑----")
                     while True:
@@ -135,71 +221,9 @@ def valid_pion_move(move):
                         if promotion_piece == 'N':
                             move["start_value"] = -3
                             return('valid')  
-                return('valid')
-            else:
-                return('illegal')
-
-          if move['name_piece_coor1'] != "pion_noir" and move['name_piece_coor1'] != "pion_blanc":
-              return('illegal')
-      else: 
-          return('illegal')
-
-  elif move['end_value'] != 0:
-      if move['name_piece_coor1'] == "pion_blanc":
-          if move['end_value'] > 0:
-              return('illegal')
-          if (move['x_end_coordinate'] == move['x_start_coordinate'] + 1 or move['x_end_coordinate'] == move['x_start_coordinate'] - 1) and move['y_end_coordinate'] == move['y_start_coordinate'] + 1:
-                if move['y_end_coordinate'] == 7:
-                    print()
-                    print("----promotion mode 👑----")
-                    while True:
-                        promotion_piece = input("enter a piece: the queen: 'Q', the rook: 'R', the bishop: 'B' and the knight 'N'> ") 
-                        print()
-                        if promotion_piece == 'Q':
-                            move["start_value"] = 9
-                            return('valid')
-                            
-                        if promotion_piece == 'R':
-                            move["start_value"] = 5
-                            return('valid')
-
-                        if promotion_piece == 'B':
-                            move["start_value"] = 4
-                            return('valid')
-
-                        if promotion_piece == 'N':
-                            move["start_value"] = 3
-                            return('valid')
-                return('valid')
-          else:
-              return('illegal')
-
-
-      if move['name_piece_coor1'] == "pion_noir":
-          if move['end_value'] < 0:
-              return('illegal')
-          if (move['x_end_coordinate'] == move['x_start_coordinate'] + 1 or move['x_end_coordinate'] == move['x_start_coordinate'] - 1) and move['y_end_coordinate'] == move['y_start_coordinate'] - 1:
-            if move['y_end_coordinate'] == 0:
-                print()
-                print("----promotion mode 👑----")
-                while True:
-                    promotion_piece = input("enter a piece: the queen: 'Q', the rook: 'R', the bishop: 'B' and the knight 'N'> ") 
-                    print()
-                    if promotion_piece == 'Q':
-                        move["start_value"] = -9
-                        return('valid')
-                        
-                    if promotion_piece == 'R':
-                        move["start_value"] = -5
-                        return('valid')
-
-                    if promotion_piece == 'B':
-                        move["start_value"] = -4
-                        return('valid')
-
-                    if promotion_piece == 'N':
-                        move["start_value"] = -3
-                        return('valid')  
+                else:
+                    move["start_value"] = -9
+                    return('valid')
             return('valid')
           else:
             return('illegal')
@@ -275,7 +299,7 @@ def valid_knight_move(move):
 
 def valid_king_move(move, castling_white=False, castling_black=False,big_castling_black=False,big_castling_white=False):
     if move['end_value'] == 0 and (castling_white if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else castling_black) and abs(move['x_start_coordinate'] - move['x_end_coordinate']) == 2 and abs(move['y_start_coordinate'] - move['y_end_coordinate']) == 0 and board[move['y_end_coordinate']][move['x_end_coordinate']-1] in (-5,5):
-        if is_check(color = ('white' if board[move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else 'black'),board_actual=board) != 'check':
+        if is_check(('white' if board[move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else 'black'),board) != 'check':
             if board[move['y_end_coordinate']][move['x_end_coordinate']+1] == 0:
                 new_board = copy.deepcopy(board)
                 new_board[move["y_start_coordinate"]][info_move["x_start_coordinate"]] = 0
@@ -284,7 +308,7 @@ def valid_king_move(move, castling_white=False, castling_black=False,big_castlin
                     if (rook_m['rook_white_castling'] == True if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else rook_m['rook_black_castling'] == True):
                         return 'casting'
     elif move['end_value'] == 0 and (big_castling_white if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else big_castling_black) and abs(move['x_start_coordinate'] - move['x_end_coordinate']) == 2 and abs(move['y_start_coordinate'] - move['y_end_coordinate']) == 0 and board[move['y_end_coordinate']][move['x_end_coordinate']+2] in (-5,5):
-        if is_check(color = ('white' if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else 'black'),board_actual=board) != 'check':
+        if is_check(('white' if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else 'black'),board) != 'check':
             if board[move['y_end_coordinate']][move['x_end_coordinate']+1] == 0 and board[move['y_end_coordinate']][move['x_end_coordinate']-1] == 0:
                 new_board = copy.deepcopy(board)
                 new_board[move["y_start_coordinate"]][info_move["x_start_coordinate"]] = 0
@@ -373,7 +397,7 @@ def valid_queen_move(move):
     else:
         return('illegal')
 
-def board_print(style=True,color='white',board=board):
+def board_print(style,color,board):
     if style:
         board_rendu = [list(reversed([piece_note_style[e] for e in r])) for r in board] if color == 'white' else [[piece_note_style[e] for e in r] for r in board]
     else:    
@@ -389,11 +413,17 @@ def find_piece(board,piece):
             if board[x][y] == piece:
                 return (y+1,x+1)
 
-def is_check(color='white',board_actual=board):
+def is_check(color,board_actual):
     knight_moves = [(2, 1), (2, -1), (-2, 1), (-2, -1),(1, 2), (1, -2), (-1, 2), (-1, -2)]
 
     if color == 'white':
         white_king_position = find_piece(board_actual,7)
+
+        try:
+            white_king_position[0]
+        except:
+            return 'error'
+        
         for i in range(white_king_position[0]-1,8):
             if board_actual[white_king_position[1]-1][i] in (-5,-9):
                 return 'check'
@@ -457,14 +487,32 @@ def is_check(color='white',board_actual=board):
             x += 1
         
         for p in knight_moves:
+            x = white_king_position[0] -1 + p[0]
+            y = white_king_position[1] -1 + p[1]
             if y >= 0 and x >= 0 and y <= 7 and x <= 7:
-                x = white_king_position[0] -1 + p[0]
-                y = white_king_position[1] -1 + p[1]
                 if board_actual[y][x] == -3:
                     return 'check'
         
-        if board_actual[white_king_position[1]-1+1][white_king_position[0]-1+1] == -1 or board_actual[white_king_position[1]-1+1][white_king_position[0]-2] == -1:
-            return 'check'
+
+        y = white_king_position[1]
+        x = white_king_position[0] 
+        if y >= 0 and y <= 7 and x >= 0 and x <= 7:
+            if board_actual[y][x] == -1:
+                return 'check'
+        x = white_king_position[0] - 2
+        if y >= 0 and y <= 7 and x >= 0 and x <= 7:
+            if board_actual[y][x] == -1:
+                return 'check'   
+
+        x = white_king_position[0] -1
+        y = white_king_position[1] -1
+        king_move = [(1,1),(-1,1),(-1,-1),(1,-1),(0,1),(0,-1),(-1,0),(1,0)]
+        if board_actual[y][x] in (7,-7):
+            for e in king_move:
+                y_c = y + e[0]
+                x_c = x + e[1]
+                if y_c >= 0 and y_c <= 7 and x_c >= 0 and x_c <= 7 and board_actual[y_c][x_c] in (7,-7):
+                    return 'check'
 
         return 'valid'
     
@@ -544,9 +592,16 @@ def is_check(color='white',board_actual=board):
             if y >= 0 and x >= 0 and y <= 7 and x <= 7:
                 if board_actual[y][x] == 3:
                     return 'check'
-
-        if board_actual[black_king_position[1]-1-1][black_king_position[0]-1+1] == 1 or board_actual[black_king_position[1]-1-1][black_king_position[0]-2] == 1:
-            return 'check'  
+                
+        y = black_king_position[1]-2
+        x = black_king_position[0] 
+        if y >= 0 and y <= 7 and x >= 0 and x <= 7:
+            if board_actual[y][x] == 1:
+                return 'check'
+        x = black_king_position[0] - 2
+        if y >= 0 and y <= 7 and x >= 0 and x <= 7:
+            if board_actual[y][x] == 1:
+                return 'check'   
 
         x = black_king_position[0] -1
         y = black_king_position[1] -1
@@ -562,135 +617,6 @@ def is_check(color='white',board_actual=board):
         return 'valid'
     else:
         exit('error color')
-
-def play_move():
-    global board
-    global castling_p_white,castling_p_black,big_castling_p_white,big_castling_p_black,list_game_move
-    result_valid_king = None
-    result_valid_pion = None
-
-    if is_checkmate(color='black',board_actual=board):
-        print("✅---checkmate white win---✅")
-        return
-    if is_checkmate(color='white',board_actual=board):
-        print("✅---checkmate black win---✅")
-        return
-    if info_move["start_value"] > 0:
-        if is_check(color = 'black') != 'valid':
-            print("🚫---invalide move black is in check---🚫")
-            return
-    else:
-        if is_check(color = 'white') != 'valid':
-            print("🚫---invalide move white is in check---🚫")
-            return
-
-    if info_move["start_value"] == 1 or info_move["start_value"] == -1:
-        result_valid_pion = valid_pion_move(info_move)
-        if result_valid_pion != 'valid' and result_valid_pion != 'en passant':
-            print("🚫---invalide move---🚫")
-            return
-        elif result_valid_pion == 'en passant':
-            new_board = copy.deepcopy(board)
-            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] = 0
-            new_board[info_move["y_end_coordinate"]][info_move["x_end_coordinate"]] = info_move["start_value"]
-            new_board[info_move["y_start_coordinate"]][info_move["x_end_coordinate"]] = 0
-    elif info_move["start_value"] == 5 or info_move["start_value"] == -5:
-        if valid_rook_move(info_move,debug=None) != 'valid':
-            print("🚫---invalide move---🚫")
-            return 
-    elif info_move["start_value"] == 4 or info_move["start_value"] == -4:
-        if valid_bishop_move(info_move) != 'valid':
-            print("🚫---invalide move---🚫")
-            return
-    elif info_move["start_value"] == 3 or info_move["start_value"] == -3:
-        if valid_knight_move(info_move) != 'valid':
-            print("🚫---invalide move---🚫")
-            return
-    elif info_move["start_value"] == 7 or info_move["start_value"] == -7:
-        result_valid_king = valid_king_move(info_move,castling_white=castling_p_white,castling_black=castling_p_black,big_castling_black=big_castling_p_black,big_castling_white=big_castling_p_white)
-        if result_valid_king not in ['casting', 'big_casting','valid']:
-            print("🚫---invalide move---🚫")
-            return 
-        elif result_valid_king == 'casting':
-            print("casting !")
-            new_board = copy.deepcopy(board)
-            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] = 0
-            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]-3] = 0
-            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]-1] = (5 if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else -5)
-            new_board[info_move["y_end_coordinate"]][info_move["x_end_coordinate"]] = info_move["start_value"]
-        elif result_valid_king == 'big_casting':
-            print("big casting !")
-            new_board = copy.deepcopy(board)
-            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] = 0
-            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]+4] = 0
-            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]+1] = (5 if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else -5)
-            new_board[info_move["y_end_coordinate"]][info_move["x_end_coordinate"]] = info_move["start_value"]
-        else:
-            castling_p_white, big_castling_p_white = (False, False) if info_move["start_value"] > 0 else (castling_p_black, big_castling_p_black)
-
-    elif info_move["start_value"] == 9 or info_move["start_value"] == -9:
-        if valid_queen_move(info_move) != 'valid':
-            print("🚫---invalide move---🚫")
-            return
-    
-    if result_valid_king not in ['big_casting', 'casting'] and result_valid_pion != 'en passant':
-        new_board = copy.deepcopy(board)
-        new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] = 0
-        new_board[info_move["y_end_coordinate"]][info_move["x_end_coordinate"]] = info_move["start_value"]
-    elif result_valid_king  != 'big_casting':
-        if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0: 
-            castling_p_white = False
-        else:
-            castling_p_black = False
-    else:
-        if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0: 
-            big_castling_p_white = False
-        else:
-            big_castling_p_black = False
-
-
-    if info_move["start_value"] < 0:
-        if is_check(color = 'black',board_actual=new_board) != 'valid':
-            print("🚫---invalide move black is in check---🚫")
-            return
-    else:
-        if is_check(color = 'white',board_actual=new_board) != 'valid':
-            print("🚫---invalide move white is in check---🚫")
-            return
-    
-    board = copy.deepcopy(new_board)
-    
-    if is_checkmate(color='black',board_actual=board):
-        print("✅---checkmate white win---✅")
-        print()
-        list_game_move.append([[info_move['y_start_coordinate'],info_move["x_start_coordinate"]],[info_move['y_end_coordinate'], info_move['x_end_coordinate']]])
-        board_print(board=board)
-        return
-    if is_checkmate(color='white',board_actual=board):
-        print("✅---checkmate black win---✅")
-        print()
-        list_game_move.append([[info_move['y_start_coordinate'], info_move['x_start_coordinate']],[info_move['y_end_coordinate'], info_move['x_end_coordinate']]])
-        board_print(board=board)
-        return
-    if list_all_legal_white_move() == [] and info_move["start_value"] > 0:
-        print("⬛---whites are pat---⬛")
-        print()
-        board_print(board=board)
-        list_game_move.append([[info_move['y_start_coordinate'], info_move['x_start_coordinate']],[info_move['y_end_coordinate'], info_move['x_end_coordinate']]])
-        return
-    if list_all_legal_black_move() == [] and info_move["start_value"] < 0:
-        print("⬛---blacks are pat---⬛")
-        print()
-        board_print(board=board)
-        list_game_move.append([[info_move['y_start_coordinate'], info_move['x_start_coordinate']],[info_move['y_end_coordinate'], info_move['x_end_coordinate']]])
-        print()
-        print("Game move:",list_game_move)
-        return
-
-    print("✅---valide move---✅")
-    print()
-    list_game_move.append([[info_move['y_start_coordinate'], info_move['x_start_coordinate']],[info_move['y_end_coordinate'], info_move['x_end_coordinate']]])
-    board_print(board=board)
 
 def list_pion_move(y,x):
     list_p_move = []
@@ -875,7 +801,7 @@ def list_all_legal_black_move():
 def is_checkmate(color, board_actual):
     if color in ('black','white'):
         if is_check(color, board_actual) == 'check':
-            move = list_all_legal_black_move()
+            move = list_all_legal_black_move() if color == 'black' else list_all_legal_white_move()
             for m in move:
                 if board[m[0][0]][m[0][1]] not in (7,-7) or abs(m[0][1]-m[1][1]) != 2:
                     new_board = copy.deepcopy(board_actual)
@@ -886,29 +812,267 @@ def is_checkmate(color, board_actual):
             return True
     return False
 
-def play(board):
-    global castling_p_white,castling_p_black,big_castling_p_white,big_castling_p_black,info_move,rook_m,list_game_move
+def play_move():
+    global board
+    global castling_p_white,castling_p_black,big_castling_p_white,big_castling_p_black,list_game_move
+    result_valid_king = None
+    result_valid_pion = None
+
+    if is_checkmate(color='black',board_actual=board):
+        print("✅---checkmate white win---✅")
+        return 'checkmate'
+    if is_checkmate(color='white',board_actual=board):
+        print("✅---checkmate black win---✅")
+        return 'checkmate'
+    if info_move["start_value"] > 0:
+        if is_check('black',board) != 'valid':
+            print("🚫---invalide move black is in check---🚫")
+            return
+    else:
+        if is_check('white',board) != 'valid':
+            print("🚫---invalide move white is in check---🚫")
+            return
+
+    if info_move["start_value"] == 1 or info_move["start_value"] == -1:
+        result_valid_pion = valid_pion_move(info_move,False)
+        if result_valid_pion != 'valid' and result_valid_pion != 'en passant':
+            print("🚫---invalide move---🚫")
+            return
+        elif result_valid_pion == 'en passant':
+            new_board = copy.deepcopy(board)
+            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] = 0
+            new_board[info_move["y_end_coordinate"]][info_move["x_end_coordinate"]] = info_move["start_value"]
+            new_board[info_move["y_start_coordinate"]][info_move["x_end_coordinate"]] = 0
+    elif info_move["start_value"] == 5 or info_move["start_value"] == -5:
+        if valid_rook_move(info_move,debug=None) != 'valid':
+            print("🚫---invalide move---🚫")
+            return 
+    elif info_move["start_value"] == 4 or info_move["start_value"] == -4:
+        if valid_bishop_move(info_move) != 'valid':
+            print("🚫---invalide move---🚫")
+            return
+    elif info_move["start_value"] == 3 or info_move["start_value"] == -3:
+        if valid_knight_move(info_move) != 'valid':
+            print("🚫---invalide move---🚫")
+            return
+    elif info_move["start_value"] == 7 or info_move["start_value"] == -7:
+        result_valid_king = valid_king_move(info_move,castling_white=castling_p_white,castling_black=castling_p_black,big_castling_black=big_castling_p_black,big_castling_white=big_castling_p_white)
+        if result_valid_king not in ['casting', 'big_casting','valid']:
+            print("🚫---invalide move---🚫")
+            return 
+        elif result_valid_king == 'casting':
+            print("casting !")
+            new_board = copy.deepcopy(board)
+            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] = 0
+            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]-3] = 0
+            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]-1] = (5 if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else -5)
+            new_board[info_move["y_end_coordinate"]][info_move["x_end_coordinate"]] = info_move["start_value"]
+        elif result_valid_king == 'big_casting':
+            print("big casting !")
+            new_board = copy.deepcopy(board)
+            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] = 0
+            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]+4] = 0
+            new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]+1] = (5 if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0 else -5)
+            new_board[info_move["y_end_coordinate"]][info_move["x_end_coordinate"]] = info_move["start_value"]
+        else:
+            if info_move["start_value"] > 0:
+                castling_p_white, big_castling_p_white = (False, False)  
+            else:
+                castling_p_black, big_castling_p_black = (False, False)   
+
+    elif info_move["start_value"] == 9 or info_move["start_value"] == -9:
+        if valid_queen_move(info_move) != 'valid':
+            print("🚫---invalide move---🚫")
+            return
+    
+    if result_valid_king not in ['big_casting', 'casting'] and result_valid_pion != 'en passant':
+        new_board = copy.deepcopy(board)
+        new_board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] = 0
+        new_board[info_move["y_end_coordinate"]][info_move["x_end_coordinate"]] = info_move["start_value"]
+    elif result_valid_king  != 'big_casting':
+        if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0: 
+            castling_p_white = False
+        else:
+            castling_p_black = False
+    else:
+        if board[info_move["y_start_coordinate"]][info_move["x_start_coordinate"]] > 0: 
+            big_castling_p_white = False
+        else:
+            big_castling_p_black = False
+
+
+    if info_move["start_value"] < 0:
+        if is_check('black',new_board) != 'valid':
+            print("🚫---invalide move black is in check---🚫")
+            return
+    else:
+        if is_check('white',new_board) != 'valid':
+            print("🚫---invalide move white is in check---🚫")
+            return
+    
+    board = copy.deepcopy(new_board)
+    
+    if is_checkmate(color='black',board_actual=board):
+        print("✅---checkmate white win---✅")
+        print()
+        list_game_move.append(board)
+        list_game_board_move.append([[info_move['y_start_coordinate'],info_move["x_start_coordinate"]],[info_move['y_end_coordinate'], info_move['x_end_coordinate']]])
+        board_print(True,'black',board)
+        return 'checkmate'
+    if is_checkmate(color='white',board_actual=board):
+        print("✅---checkmate black win---✅")
+        print()
+        list_game_move.append(board)
+        list_game_board_move.append([[info_move['y_start_coordinate'], info_move['x_start_coordinate']],[info_move['y_end_coordinate'], info_move['x_end_coordinate']]])
+        board_print(True,'white',board)
+        return 'checkmate'
+
+    print("✅---valide move---✅")
+    print()
+    list_game_move.append([[info_move['y_start_coordinate'], info_move['x_start_coordinate']],[info_move['y_end_coordinate'], info_move['x_end_coordinate']]])
+    list_game_board_move.append(board)
+    return 'valid'
+
+def play():
+    global castling_p_white,castling_p_black,big_castling_p_white,big_castling_p_black,info_move,rook_m,list_game_move,list_game_board_move
+    global board
     castling_p_white = True
     castling_p_black = True 
     big_castling_p_white = True 
     big_castling_p_black = True
     rook_m = {'rook_white_castling' : True, 'rook_black_castling' : True, 'rook_big_white_castling' : True, 'rook_big_black_castling' : True}
     list_game_move =[]
-    while True:
-        while True:
-            print()
-            all_move = input(">")
-            print()
-            if bool(re.match(r'^[a-h][1-8]\s[a-h][1-8]$', all_move)):
-                break
-            else:
-                print("🚫---invalide move---🚫 => valide move example: ✅--- e2 e4 ---✅")
-        
-        info_move = give_move_info(all_move,debug=None)
-        if info_move == 'illegal':
-            print("🚫---invalide move---🚫")
-        else:
-            play_move()
+    list_game_board_move =[]
 
-board_print()
-play(board)
+    board = [
+        [ 5, 3, 4, 7, 9, 4, 3, 5],
+        [ 1, 1, 1, 1, 1, 1, 1, 1],
+        [ 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0],
+        [ 0, 0, 0, 0, 0, 0, 0, 0],
+        [-1,-1,-1,-1,-1,-1,-1,-1],
+        [-5,-3,-4,-7,-9,-4,-3,-5]
+    ]
+
+    if board[0][3] != 7:
+        castling_p_white = False
+        big_castling_p_white = False
+    if board[0][0] != 5:
+        rook_m['rook_white_castling'] = False
+    if board[0][7] != 5:
+        rook_m['rook_big_white_castling'] = False
+    if board[7][3] != -7:
+        castling_p_black = False
+        big_castling_p_black = False
+    if board[7][0] != -5:
+        rook_m['rook_black_castling'] = False
+    if board[7][7] != -5:
+        rook_m['rook_big_black_castling'] = False
+
+    print(list_all_legal_white_move())
+    print(len(list_all_legal_white_move()))
+    print("🌟 Game start 🌟")
+    print()
+    print("⚪---white play---⚪")
+    print()
+    board_print(True,'white',board)
+    while True:
+        for i in range(0,2):
+            rep = None
+            while rep != 'valid':
+                while True:
+                    print()
+                    all_move = input(">")
+                    print()
+                    if bool(re.match(r'^[a-h][1-8]\s[a-h][1-8]$', all_move)):
+                        break
+                    else:
+                        print("🚫---invalide move---🚫 => valide move example: ✅--- e2 e4 ---✅")
+                
+                legal_white_move = list_all_legal_white_move()
+                legal_black_move = list_all_legal_black_move()
+
+
+                if legal_white_move == [] and i == 0:
+                    print("⬛---whites are pat---⬛")
+                    print()
+                    board_print(True,'white',board)
+                    list_game_move.append(board)
+                    list_game_board_move.append([[info_move['y_start_coordinate'], info_move['x_start_coordinate']],[info_move['y_end_coordinate'], info_move['x_end_coordinate']]])
+                    return 'pat'
+                if legal_black_move == [] and i == 1:
+                    print("⬛---blacks are pat---⬛")
+                    print()
+                    board_print(True,'black',board)
+                    list_game_move.append([[info_move['y_start_coordinate'], info_move['x_start_coordinate']],[info_move['y_end_coordinate'], info_move['x_end_coordinate']]])
+                    list_game_board_move.append(board)
+                    print()
+                    print("Game move:",list_game_move)
+                    return 'pat'
+
+                move = random.choice(list_all_legal_white_move()) if i == 0 else random.choice(list_all_legal_black_move())
+                all_move = f"{coordinate[move[0][1]+1]}{move[0][0]+1} {coordinate[move[1][1]+1]}{move[1][0]+1}"   
+                
+                print(all_move,move)
+                
+                info_move = give_move_info(all_move,debug=None)
+                if info_move == 'illegal':
+                    print("🚫---invalide move---🚫")
+                elif (info_move['start_value'] > 0 and i == 1) or (info_move['start_value'] < 0 and i == 0):
+                    print("🚫---It's not your turn ---🚫")
+                else:
+                    rep = play_move()
+
+                if rep == 'checkmate':
+                    return 'checkmate'
+
+            if check_repetition():
+                if i == 0:
+                    board_print(True,'white',board)
+                else:
+                    board_print(True,'black',board)
+                print("⏸---Draw by repetition---⏸")
+                return 'draw'
+            
+            if len(list_game_move) >= 50:
+                no_capture_moves = all(board[move[1][0]][move[1][1]] == 0 for move in list_game_move[-50:])               
+
+                if no_capture_moves:
+                    if i == 0:
+                        board_print(True,'white',board)
+                    else:
+                        board_print(True,'black',board)
+                    print("⏸---Draw by fifty-move rule---⏸")
+                    return 'draw'
+
+            def material_insufficiency(board):
+                for row in board:
+                    for element in row:
+                        if element not in [0, 7, -7]:
+                            return False
+                return True
+
+            if material_insufficiency(board):
+                print("⏸---Draw by insufficient material---⏸")
+                print()
+                if i == 0:
+                    board_print(True,'white',board) 
+                else:
+                    board_print(True,'black',board)
+                return 'draw'
+                
+            if i == 0:
+                print()
+                print("⚫---black play---⚫")
+                print()
+                board_print(True,'black',board)
+
+            elif i == 1:
+                print()
+                print("⚪---white play---⚪")
+                print()
+                board_print(True,'white',board)    
+
+play()
+                
