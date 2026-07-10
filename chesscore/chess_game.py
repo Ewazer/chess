@@ -1214,7 +1214,10 @@ class MoveGen:
         """
 
         list_k_moves = []
-        append = list_k_moves.append
+        extend = list_k_moves.extend
+
+        knight_table = KNIGHT_TABLE
+        knight_moves_encoded = KNIGHT_MOVES_ENCODED
 
         own_occupied_squares = board_obj.board_occupied_squares[WHITE_INDEX if color == WHITE else BLACK_INDEX]
         
@@ -1227,13 +1230,7 @@ class MoveGen:
             from_ = least_significant_bit.bit_length() - 1
             knight_board &= knight_board - 1
 
-            to_possibilities = KNIGHT_TABLE[from_] & free_squares
-            while to_possibilities:
-                least_significant_bit2 = to_possibilities & -to_possibilities
-                to = least_significant_bit2.bit_length() - 1
-                to_possibilities &= to_possibilities - 1
-
-                append(from_ | (to << 6))
+            extend(knight_moves_encoded[from_][knight_table[from_] & free_squares])
 
         return list_k_moves
     
@@ -1252,7 +1249,12 @@ class MoveGen:
         """
 
         list_k_captures = []
-        append = list_k_captures.append
+        extend = list_k_captures.extend
+
+        knight_table = KNIGHT_TABLE
+        knight_moves_encoded = KNIGHT_MOVES_ENCODED
+
+        enemy_occupied_squares = board_obj.board_occupied_squares[BLACK_INDEX if color == WHITE else WHITE_INDEX]
 
         knight_board = board_obj.knight & board_obj.board_occupied_squares[WHITE_INDEX if color == WHITE else BLACK_INDEX]
 
@@ -1261,13 +1263,7 @@ class MoveGen:
             from_ = least_significant_bit.bit_length() - 1
             knight_board &= knight_board - 1
 
-            to_possibilities = KNIGHT_TABLE[from_] & board_obj.board_occupied_squares[BLACK_INDEX if color == WHITE else WHITE_INDEX]
-            while to_possibilities:
-                least_significant_bit2 = to_possibilities & -to_possibilities
-                to = least_significant_bit2.bit_length() - 1
-                to_possibilities &= to_possibilities - 1
-
-                append(from_ | (to << 6))
+            extend(knight_moves_encoded[from_][knight_table[from_] & enemy_occupied_squares])
 
         return list_k_captures
 
@@ -1549,31 +1545,18 @@ class MoveGen:
             list: Encoded moves as (from_square | (to_square << 6)).
         """
 
-        list_k_moves = []
-
         own_occupied_squares = board_obj.board_occupied_squares[WHITE_INDEX if color == WHITE else BLACK_INDEX]
-
         king_board = board_obj.king & own_occupied_squares
-
-        free_squares = (~own_occupied_squares) & U64 
-
+        free_squares = (~own_occupied_squares) & U64
         from_ = king_board.bit_length() - 1
 
-        append = list_k_moves.append
-
-        to_possibilities = KING_TABLE[from_] & free_squares
-        while to_possibilities:
-            least_significant_bit2 = to_possibilities & -to_possibilities
-            to = least_significant_bit2.bit_length() - 1
-            to_possibilities &= to_possibilities - 1
-
-            append(from_ | (to << 6))
+        list_k_moves = list(KING_MOVES_ENCODED[from_][KING_TABLE[from_] & free_squares])
 
         if castling:
             list_k_moves.extend(MoveGen.list_all_castling_move(board_obj, color))
 
         return list_k_moves
-    
+
 
     @staticmethod
     def list_all_king_captures(board_obj, color, castling=True) -> list[int]:
@@ -1589,25 +1572,12 @@ class MoveGen:
             list: Encoded moves as (from_square | (to_square << 6)).
         """
 
-        list_k_captures = []
-
         own_occupied_squares = board_obj.board_occupied_squares[WHITE_INDEX if color == WHITE else BLACK_INDEX]
-
+        enemy_occupied_squares = board_obj.board_occupied_squares[BLACK_INDEX if color == WHITE else WHITE_INDEX]
         king_board = board_obj.king & own_occupied_squares
-
         from_ = king_board.bit_length() - 1
 
-        append = list_k_captures.append
-
-        to_possibilities = KING_TABLE[from_] & board_obj.board_occupied_squares[BLACK_INDEX if color == WHITE else WHITE_INDEX]
-        while to_possibilities:
-            least_significant_bit2 = to_possibilities & -to_possibilities
-            to = least_significant_bit2.bit_length() - 1
-            to_possibilities &= to_possibilities - 1
-
-            append(from_ | (to << 6))
-
-        return list_k_captures
+        return list(KING_MOVES_ENCODED[from_][KING_TABLE[from_] & enemy_occupied_squares])
     
     
     @staticmethod
@@ -2348,23 +2318,20 @@ class MoveGen:
         """
 
         list_k_quiets = []
-        append = list_k_quiets.append
+        extend = list_k_quiets.extend
+
+        knight_table = KNIGHT_TABLE
+        knight_moves_encoded = KNIGHT_MOVES_ENCODED
 
         knight_board = board_obj.knight & board_obj.board_occupied_squares[WHITE_INDEX if color == WHITE else BLACK_INDEX]
         empty_squares = (~board_obj.all_board_occupied_squares) & U64
 
         while knight_board:
-            least_significant_bit = knight_board & -knight_board
-            from_ = least_significant_bit.bit_length() - 1
+            lsb = knight_board & -knight_board
+            from_ = lsb.bit_length() - 1
             knight_board &= knight_board - 1
 
-            to_possibilities = KNIGHT_TABLE[from_] & empty_squares
-            while to_possibilities:
-                least_significant_bit2 = to_possibilities & -to_possibilities
-                to = least_significant_bit2.bit_length() - 1
-                to_possibilities &= to_possibilities - 1
-
-                append(from_ | (to << 6))
+            extend(knight_moves_encoded[from_][knight_table[from_] & empty_squares])
 
         return list_k_quiets
 
@@ -2516,25 +2483,15 @@ class MoveGen:
             list: Encoded moves as (from_square | (to_square << 6)).
         """
 
-        list_k_quiets = []
-
         own_occupied_squares = board_obj.board_occupied_squares[WHITE_INDEX if color == WHITE else BLACK_INDEX]
-
+        
         king_board = board_obj.king & own_occupied_squares
-
+        
         empty_squares = (~board_obj.all_board_occupied_squares) & U64
-
+        
         from_ = king_board.bit_length() - 1
 
-        append = list_k_quiets.append
-
-        to_possibilities = KING_TABLE[from_] & empty_squares
-        while to_possibilities:
-            least_significant_bit2 = to_possibilities & -to_possibilities
-            to = least_significant_bit2.bit_length() - 1
-            to_possibilities &= to_possibilities - 1
-
-            append(from_ | (to << 6))
+        list_k_quiets = list(KING_MOVES_ENCODED[from_][KING_TABLE[from_] & empty_squares])
 
         if castling:
             list_k_quiets.extend(MoveGen.list_all_castling_move(board_obj, color))
@@ -2905,6 +2862,11 @@ class MoveGen:
             quiets_list (list): List to append quiet moves to.
         """
 
+        knight_table = KNIGHT_TABLE
+        knight_moves_encoded = KNIGHT_MOVES_ENCODED
+        extend_captures = captures_list.extend
+        extend_quiets = quiets_list.extend
+
         own_occ = board_obj.board_occupied_squares[WHITE_INDEX if color == WHITE else BLACK_INDEX]
         enemy_occ = board_obj.board_occupied_squares[BLACK_INDEX if color == WHITE else WHITE_INDEX]
         empty_squares = ~board_obj.all_board_occupied_squares & U64
@@ -2912,25 +2874,15 @@ class MoveGen:
         knight = board_obj.knight & own_occ
 
         while knight:
-            least_significant_bit = knight & -knight
-            from_ = least_significant_bit.bit_length() - 1
+            lsb = knight & -knight
+            from_ = lsb.bit_length() - 1
             knight &= knight - 1
 
-            attacks = KNIGHT_TABLE[from_]
+            attacks = knight_table[from_]
+            encoded = knight_moves_encoded[from_]
 
-            capts = attacks & enemy_occ
-            while capts:
-                least_significant_bit2 = capts & -capts
-                to = least_significant_bit2.bit_length() - 1
-                capts &= capts - 1
-                captures_list.append(from_ | (to << 6))
-
-            qts = attacks & empty_squares
-            while qts:
-                least_significant_bit2 = qts & -qts
-                to = least_significant_bit2.bit_length() - 1
-                qts &= qts - 1
-                quiets_list.append(from_ | (to << 6))
+            extend_captures(encoded[attacks & enemy_occ])
+            extend_quiets(encoded[attacks & empty_squares])
 
 
     @staticmethod
@@ -3087,24 +3039,13 @@ class MoveGen:
         from_ = king.bit_length() - 1
 
         attacks = KING_TABLE[from_]
+        encoded = KING_MOVES_ENCODED[from_]
 
-        capts = attacks & enemy_occ
-        while capts:
-            least_significant_bit2 = capts & -capts
-            to = least_significant_bit2.bit_length() - 1
-            capts &= capts - 1
-            captures_list.append(from_ | (to << 6))
-
-        qts = attacks & empty_squares
-        while qts:
-            least_significant_bit2 = qts & -qts
-            to = least_significant_bit2.bit_length() - 1
-            qts &= qts - 1
-            quiets_list.append(from_ | (to << 6))
+        captures_list.extend(encoded[attacks & enemy_occ])
+        quiets_list.extend(encoded[attacks & empty_squares])
 
         if castling:
-            for mv in MoveGen.list_all_castling_move(board_obj, color):
-                quiets_list.append(mv)
+            quiets_list.extend(MoveGen.list_all_castling_move(board_obj, color))
 
 
     @staticmethod
@@ -4504,7 +4445,6 @@ class ChessCore:
             return outcome
 
         return None
-
 
 
 if __name__ == "__main__":
