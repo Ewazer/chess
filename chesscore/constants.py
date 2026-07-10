@@ -45,6 +45,8 @@ __all__ = [
     "CR_BK",
     "CR_BQ",
     "CASTLING_UPDATE",
+    "KING_MOVES_ENCODED",
+    "KNIGHT_MOVES_ENCODED",
     "WHITE_BG",
     "BLACK_BG",
     "BG",
@@ -200,6 +202,63 @@ CASTLING_UPDATE[7] = 15 & ~CR_WK
 CASTLING_UPDATE[56] = 15 & ~CR_BQ
 CASTLING_UPDATE[60] = 15 & ~(CR_BK | CR_BQ)
 CASTLING_UPDATE[63] = 15 & ~CR_BK
+
+
+KING_MOVES_ENCODED = [] 
+
+for king_position in range(64):
+    bitboard_move = KING_TABLE[king_position]
+
+    neighbors = []
+    
+    while bitboard_move:
+        lsb = bitboard_move & -bitboard_move
+        neighbors.append(lsb.bit_length() - 1)
+        bitboard_move ^= lsb
+
+    n = len(neighbors)
+    table = {}
+
+    for ensemble in range(2**n):
+        val = 0
+        moves = []
+        for i in range(n):
+            if ensemble & (1 << i):
+                to = neighbors[i]
+                val |= (1 << to)
+                moves.append(king_position | (to << 6))
+        
+        table[val] = tuple(moves)
+    
+    KING_MOVES_ENCODED.append(table)
+
+
+KNIGHT_MOVES_ENCODED = [] 
+
+for knight_position in range(64):
+    bitboard_move = KNIGHT_TABLE[knight_position]
+    neighbors = []
+    
+    while bitboard_move:
+        lsb = bitboard_move & -bitboard_move
+        neighbors.append(lsb.bit_length() - 1)
+        bitboard_move ^= lsb
+
+    n = len(neighbors)
+    table = {}
+    
+    for ensemble in range(2**n):
+        val = 0
+        moves = []
+        for i in range(n):
+            if ensemble & (1 << i):
+                to = neighbors[i]
+                val |= (1 << to)
+                moves.append(knight_position | (to << 6))
+        
+        table[val] = tuple(moves)
+
+    KNIGHT_MOVES_ENCODED.append(table)
 
 
 #For engine
